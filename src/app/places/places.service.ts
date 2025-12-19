@@ -33,7 +33,7 @@ export class PlacesService {
   addPlaceToUserPlaces(place: Place) {
     const prevPlaces = this.userPlaces();
 
-    if (!prevPlaces.some((p) => p.id === place.id)) {
+    if (!prevPlaces.some(p => p.id === place.id)) {
     this.userPlaces.set([...prevPlaces, place]);
 }
      return this.httpCient.put('http://localhost:3000/user-places', {
@@ -46,7 +46,21 @@ export class PlacesService {
     );
   }
 
-  removeUserPlace(place: Place) {}
+  removeUserPlace(place: Place) {
+    const prevPlaces = this.userPlaces();
+
+    if (prevPlaces.some(p => p.id === place.id)) {
+    this.userPlaces.set(prevPlaces.filter(p => p.id !== place.id));
+    }  
+    return this.httpCient
+    .delete('http://localhost:3000/user-places/' + place.id)
+    .pipe(
+      catchError((error) => {
+        this.userPlaces.set(prevPlaces);
+        return throwError(() => new Error('Failed to remove selected place.'))
+      })
+    );
+  }
 
   private fetchPlaces(url: string, errorMessage: string) {
     return this.httpCient
